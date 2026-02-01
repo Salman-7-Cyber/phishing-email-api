@@ -2,10 +2,20 @@ import joblib
 import re
 import os
 
-# ====== Model Lazy Loading ======
-MODEL_PATH = os.path.join("models", "pipeline.joblib")
-_model = None
+MODEL_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "..",
+    "models",
+    "pipeline.joblib"
+)
 
+model = None
+
+def load_model():
+    global model
+    if model is None:
+        model = joblib.load(MODEL_PATH)
+    return model
 def get_model():
     global _model
     if _model is None:
@@ -13,7 +23,6 @@ def get_model():
     return _model
 
 
-# ====== Rules ======
 PHISHING_TYPE_RULES = {
     "credential harvesting": [
         "verify", "login", "password", "account", "sign in", "credentials"
@@ -44,14 +53,12 @@ SUSPICIOUS_WORDS = [
     "security alert"
 ]
 
-# ====== Core ML ======
 def predict_email(text: str) -> float:
-    model = get_model()
-    prob = model.predict_proba([text])[0]
+    mdl = load_model()
+    prob = mdl.predict_proba([text])[0]
     return prob[1]
 
 
-# ====== Risk Messages ======
 def get_risk_message(score: float) -> dict:
     if score >= 0.70:
         return {
@@ -91,7 +98,6 @@ def get_risk_message(score: float) -> dict:
         }
 
 
-# ====== Helpers ======
 def detect_links(text: str) -> list:
     url_pattern = r"http[s]?://\S+|www\.\S+"
     return re.findall(url_pattern, text)
