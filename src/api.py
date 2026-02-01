@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
-# استيراد الدوال الجاهزة (العقل)
 from src.inference import (
     predict_email,
     get_risk_message,
