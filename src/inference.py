@@ -1,13 +1,15 @@
 import joblib
-import os
 import re
+import os
 
-MODEL_PATH = "models/pipeline.joblib"
+MODEL_PATH = os.path.join("models", "pipeline.joblib")
+model = None  # ← مهم
 
-if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError("Model file not found")
-
-model = joblib.load(MODEL_PATH)
+def load_model():
+    global model
+    if model is None:
+        model = joblib.load(MODEL_PATH)
+    return model
 
 
 PHISHING_TYPE_RULES = {
@@ -59,8 +61,9 @@ def detect_phishing_type(text: str, links: list, urgency_words: list) -> str:
 
 
 def predict_email(text: str) -> float:
-    prob = model.predict_proba([text])[0]
-    return float(prob[1])
+    clf = load_model()
+    prob = clf.predict_proba([text])[0]
+    return prob[1]
 
 def get_risk_message(score: float) -> dict:
     if score >= 0.70:
