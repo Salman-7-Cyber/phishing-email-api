@@ -2,20 +2,14 @@ import joblib
 import re
 import os
 
-
-MODEL_PATH = "models/pipeline.joblib"
-model = None
+MODEL_PATH = os.path.join("models", "pipeline.joblib")
+model = None  # ← مهم
 
 def load_model():
     global model
     if model is None:
         model = joblib.load(MODEL_PATH)
     return model
-def get_model():
-    global _model
-    if _model is None:
-        _model = joblib.load(MODEL_PATH)
-    return _model
 
 
 PHISHING_TYPE_RULES = {
@@ -35,7 +29,6 @@ PHISHING_TYPE_RULES = {
         "love", "dear", "relationship", "dating", "gift"
     ],
 }
-
 SUSPICIOUS_WORDS = [
     "urgent",
     "immediately",
@@ -48,11 +41,29 @@ SUSPICIOUS_WORDS = [
     "security alert"
 ]
 
-def predict_email(text: str) -> float:
-    mdl = load_model()
-    prob = mdl.predict_proba([text])[0]
-    return prob[1]
+def detect_phishing_type(text: str, links: list, urgency_words: list) -> str:
+    text_lower = text.lower()
 
+    if links:
+        for link in links:
+            if link.startswith("http://") or link.count(".") < 2:
+                return "credential_harvesting"
+
+    if urgency_words:
+        return "urgency"
+
+    for p_type, keywords in PHISHING_TYPE_RULES.items():
+        for kw in keywords:
+            if kw in text_lower:
+                return p_type
+
+    return "generic phishing"
+
+
+def predict_email(text: str) -> float:
+    clf = load_model()
+    prob = clf.predict_proba([text])[0]
+    return prob[1]
 
 def get_risk_message(score: float) -> dict:
     if score >= 0.70:
@@ -92,29 +103,12 @@ def get_risk_message(score: float) -> dict:
             ),
         }
 
-
 def detect_links(text: str) -> list:
     url_pattern = r"http[s]?://\S+|www\.\S+"
     return re.findall(url_pattern, text)
 
 def detect_urgency_words(text: str) -> list:
+
     text_lower = text.lower()
-    return [word for word in SUSPICIOUS_WORDS if word in text_lower]
-
-def detect_phishing_type(text: str, links: list, urgency_words: list) -> str:
-    text_lower = text.lower()
-
-    if links:
-        for link in links:
-            if link.startswith("http://") or link.count(".") < 2:
-                return "credential_harvesting"
-
-    if urgency_words:
-        return "urgency"
-
-    for p_type, keywords in PHISHING_TYPE_RULES.items():
-        for kw in keywords:
-            if kw in text_lower:
-                return p_type
-
-    return "generic phishing"
+    found = [word for word in SUSPICIOUS_WORDS if word in text_lower]
+    return found
