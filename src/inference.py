@@ -2,13 +2,8 @@ import joblib
 import re
 import os
 
-MODEL_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "..",
-    "models",
-    "pipeline.joblib"
-)
 
+MODEL_PATH = "models/pipeline.joblib"
 model = None
 
 def load_model():
