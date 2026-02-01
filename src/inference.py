@@ -1,5 +1,6 @@
 import joblib
 import os
+import re
 
 MODEL_PATH = "models/pipeline.joblib"
 
@@ -7,12 +8,6 @@ if not os.path.exists(MODEL_PATH):
     raise FileNotFoundError("Model file not found")
 
 model = joblib.load(MODEL_PATH)
-
-def load_model():
-    global model
-    if model is None:
-        model = joblib.load(MODEL_PATH)
-    return model
 
 
 PHISHING_TYPE_RULES = {
