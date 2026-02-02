@@ -1,7 +1,7 @@
 fastapi
-uvicorn
+uvicorn[standard]
 scikit-learn
 joblib
 numpy
 pandas
-
+pydantic
