@@ -1,3 +1,8 @@
+"""
+Phishing Email Detection API
+FastAPI application for analyzing emails and detecting phishing attempts.
+"""
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,6 +27,7 @@ from src.inference import (
 # Load model on startup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Load ML model on startup, clean up on shutdown."""
     try:
         load_model()
         logger.info("Model loaded successfully")
@@ -60,27 +66,20 @@ class AnalyzeRequest(BaseModel):
     )
 
 
-# Response model
-class AnalyzeResponse(BaseModel):
-    risk_score: float
-    risk_category: str
-    risk_level: str
-    explanation: str
-    recommendation: str
-    phishing_type: str
-    reasons: list[str]
-
-
 # Health check endpoint
 @app.get("/", tags=["Health"])
 def health_check():
+    """Check if API is running."""
     return {
+        "status": "healthy",
         "message": "Phishing Detection API is running",
+        "version": "1.0.0"
     }
 
 
 @app.get("/health", tags=["Health"])
 def detailed_health():
+    """Detailed health check including model status."""
     try:
         from src.inference import model
         model_loaded = model is not None
@@ -95,8 +94,17 @@ def detailed_health():
 
 
 # Main analysis endpoint
-@app.post("/analyze", response_model=AnalyzeResponse, tags=["Analysis"])
+@app.post("/analyze", tags=["Analysis"])
 def analyze_email(request: AnalyzeRequest):
+    """
+    Analyze an email for phishing indicators.
+
+    Args:
+        request: AnalyzeRequest containing the email text
+
+    Returns:
+        Dictionary with risk assessment and recommendations
+    """
     try:
         text = request.text.strip()
 
@@ -136,7 +144,7 @@ def analyze_email(request: AnalyzeRequest):
             phishing_type = detect_phishing_type(text, links, urgent_words)
 
         # Log the analysis
-        logger.info(f"Analyzed email: risk_score={score:.4f}, category={risk_info['level']}")
+        logger.info(f"Analyzed email: risk_score={score:.4f}")
 
         return {
             "risk_score": round(score, 4),
@@ -160,20 +168,3 @@ def analyze_email(request: AnalyzeRequest):
             status_code=500,
             detail=f"Analysis failed: {str(e)}"
         )
-
-
-# Error handlers
-@app.exception_handler(404)
-async def not_found_handler(request, exc):
-    return {
-        "error": "Endpoint not found",
-        "detail": "The requested endpoint does not exist"
-    }
-
-
-@app.exception_handler(500)
-async def internal_error_handler(request, exc):
-    return {
-        "error": "Internal server error",
-        "detail": "An unexpected error occurred"
-    }
