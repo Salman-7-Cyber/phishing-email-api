@@ -9,13 +9,6 @@ __pycache__/
 *$py.class
 *.so
 
-# Data files (DON'T UPLOAD THESE)
-data/
-*.csv
-
-# Training script (optional - not needed in production)
-train.py
-
 # IDE
 .vscode/
 .idea/
@@ -27,3 +20,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Don't upload the old model (Railway will create new one)
+models/pipeline.joblib
