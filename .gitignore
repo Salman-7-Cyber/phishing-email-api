@@ -9,9 +9,12 @@ __pycache__/
 *$py.class
 *.so
 
-# Data files
-data/raw/
+# Data files (DON'T UPLOAD THESE)
+data/
 *.csv
+
+# Training script (optional - not needed in production)
+train.py
 
 # IDE
 .vscode/
